@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>單字記憶 · 間隔複習</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f2ec;--card:#fffdf9;--ink:#1d2628;--muted:#6b7472;--line:#e4ded3;--accent:#1f6f63;--accent-soft:#e1efe9;--on-accent:#fff;--again:#b9473f;--hard:#b7801c;--good:#1f6f63;--easy:#2d64a3;--shadow:0 1px 2px rgba(30,30,20,.05),0 4px 16px rgba(30,30,20,.06)}
+@media (prefers-color-scheme:dark){:root{--bg:#111514;--card:#1a201f;--ink:#e9ece9;--muted:#9aa4a1;--line:#2a3230;--accent:#5cbfa9;--accent-soft:#1d3430;--on-accent:#0d1716;--again:#e0756b;--hard:#e0ad4f;--good:#5cbfa9;--easy:#7aa8e0;--shadow:none}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,-apple-system,"PingFang TC",sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--bg);border-bottom:1px solid transparent}
+.brand{font-weight:700;letter-spacing:.03em;font-size:17px}
+.sync{font-size:12px;color:var(--muted)}
+main{max-width:560px;margin:0 auto;padding:4px 16px 24px}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:6}
+.tabs button{flex:1;max-width:120px;background:none;border:0;color:var(--muted);font:inherit;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer}
+.tabs button.on{color:var(--accent);font-weight:500}
+.tabs svg{width:23px;height:23px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+h2{font-size:15px;margin:0 0 10px;font-weight:700}
+.muted{color:var(--muted)}.small{font-size:13px}.center{text-align:center}
+.btn{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:500;border-radius:12px;padding:10px 16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px}
+.btn svg{width:16px;height:16px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--accent);padding:6px 10px;min-height:36px}
+.btn.danger{color:var(--again)}
+.big-num{font-family:Newsreader,Georgia,serif;font-size:58px;line-height:1;font-weight:600}
+.row{display:flex;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--bg);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:24px;font-family:Newsreader,Georgia,serif;font-weight:600;line-height:1.2}
+.stat span{font-size:12px;color:var(--muted)}
+.progress{height:6px;background:var(--line);border-radius:6px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.flash{min-height:300px}
+.word{font-family:Newsreader,Georgia,serif;font-size:40px;font-weight:600;line-height:1.15;word-break:break-word}
+.zh-front{font-size:28px;font-weight:700;margin:6px 0}
+.phon{color:var(--muted);font-size:15px;margin-top:6px}
+.pos{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:6px;padding:0 6px;color:var(--muted);margin-right:8px;vertical-align:1px}
+.meaning{font-size:21px;font-weight:500;margin:8px 0 2px}
+hr.sep{border:0;border-top:1px dashed var(--line);margin:16px 0 10px}
+.example{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:12px}
+.example.dim{opacity:.5}
+.example .en{font-family:Newsreader,Georgia,serif;font-size:18.5px;line-height:1.45}
+.example mark{background:var(--accent-soft);color:inherit;border-radius:4px;padding:0 2px}
+.tip{margin-top:10px;font-size:14px;color:var(--muted)}
+.icon-btn{border:0;background:var(--accent-soft);color:var(--accent);width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn.sm{width:34px;height:34px}.icon-btn.sm svg{width:16px;height:16px}
+.rate{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.rate button{border:0;border-radius:12px;padding:10px 4px;font:inherit;font-weight:700;color:var(--on-accent);cursor:pointer;display:flex;flex-direction:column;align-items:center;line-height:1.2;min-height:58px}
+.rate small{font-weight:400;font-size:11px;opacity:.9;margin-top:4px}
+.r0{background:var(--again)}.r1{background:var(--hard)}.r2{background:var(--good)}.r3{background:var(--easy)}
+.list .item{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.list .item:last-child{border-bottom:0}
+.item .w{font-family:Newsreader,Georgia,serif;font-size:19px;font-weight:600;line-height:1.3}
+.item .m{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{font-size:11px;border-radius:999px;padding:2px 8px;white-space:nowrap;display:inline-block}
+.p-new{background:color-mix(in srgb,var(--easy) 15%,transparent);color:var(--easy)}
+.p-learn{background:color-mix(in srgb,var(--hard) 17%,transparent);color:var(--hard)}
+.p-fam{background:var(--accent-soft);color:var(--accent)}
+.p-mast{background:var(--accent);color:var(--on-accent)}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;font-size:16px}
+textarea{min-height:120px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;white-space:nowrap;cursor:pointer;color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:8px 4px;font:inherit;font-size:14px;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--card);color:var(--ink);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.label{font-size:13px;color:var(--muted);margin:12px 0 5px;display:block}
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.38);display:flex;align-items:flex-end;justify-content:center}
+.sheet.hidden{display:none}
+.sheet .panel{background:var(--card);width:100%;max-width:560px;max-height:90vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 18px calc(20px + env(safe-area-inset-bottom))}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:30;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.bars{display:flex;align-items:flex-end;gap:8px;height:110px;margin-top:6px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.bars i{width:100%;background:var(--accent);border-radius:6px 6px 2px 2px;min-height:2px}
+.bars b{font-size:11px;font-weight:500;color:var(--muted)}
+.bars span{font-size:11px;color:var(--muted)}
+ol.steps{padding-left:20px;margin:6px 0 10px}
+ol.steps li{margin:4px 0}
+.preview{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:4px 10px;margin-top:10px}
+.preview .pr{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.preview .pr:last-child{border-bottom:0}
+.preview .pr .x{color:var(--muted)}
+.loader{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.note{font-size:13px;color:var(--muted);background:var(--bg);border-radius:10px;padding:10px 12px}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand">單字記憶</div><div id="sync" class="sync"></div></header>
+<main id="view"><div class="card center muted">載入中…</div></main>
+<nav class="tabs" id="tabs">
+  <button data-act="tab" data-tab="review"></button>
+  <button data-act="tab" data-tab="library"></button>
+  <button data-act="tab" data-tab="add"></button>
+  <button data-act="tab" data-tab="me"></button>
+</nav>
+<div id="sheet" class="sheet hidden"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+const DAY = 86400000;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const ICON = {
+  review:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="14" height="14" rx="2.5"/><path d="M7 3h11a3 3 0 0 1 3 3v11"/></svg>',
+  library:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
+  add:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
+  me:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>',
+  speak:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+  spark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>'
+};
+const TABS = {review:'複習', library:'單字庫', add:'新增', me:'我的'};
+const STL = {new:'新字', learn:'學習中', fam:'熟悉', mast:'精通'};
+const FIELDS = ['id','word','meaning','phonetic','pos','example','exampleZh','tip','exDay','added','due','interval','ease','reps','lapses','lastReview','recent'];
+
+const S = {
+  mode:'loading', db:null, uid:null, words:new Map(),
+  settings:{newPerDay:10, direction:'en2zh', rate:0.95, level:'jr'},
+  stats:{days:{}}, sample:null, tts:null,
+  tab:'review', session:null, sheetId:null, delArmed:false,
+  libQuery:'', libSort:'weak', libFilter:'all', libLimit:150,
+  importText:'', importRows:null, importing:null, enriching:null,
+  genBusy:new Set(), loadNote:'', syncNote:''
+};
+
+/* ---------- helpers ---------- */
+function startOfDay(t){const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()}
+function addDays(t,n){const d=new Date(startOfDay(t));d.setDate(d.getDate()+n);return d.getTime()}
+function dayKey(t){const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function hash(s){let h=2166136261;for(const ch of s){h^=ch.codePointAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(36)}
+function wordId(word){const k=word.trim().toLowerCase().replace(/\s+/g,' ');const slug=k.normalize('NFKD').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60)||'x';return 'w-'+slug+'-'+hash(k)}
+function plain(w){const o={};for(const k of FIELDS){if(w[k]!==undefined&&w[k]!==null&&w[k]!=='')o[k]=w[k]}return o}
+function isTyping(){const a=document.activeElement;return !!a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT')}
+let toastT=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch{return false}}};
+const LS_OK=(()=>{try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return true}catch{return false}})();
+const chains=new Map();
+function queued(key,fn){const prev=chains.get(key)||Promise.resolve();const p=prev.catch(()=>{}).then(fn);chains.set(key,p);p.catch(()=>{}).then(()=>{if(chains.get(key)===p)chains.delete(key)});return p}
+async function withRetry(fn){try{return await fn()}catch(e){if(e&&e.code==='unavailable'){await new Promise(r=>setTimeout(r,400+Math.random()*700));return fn()}throw e}}
+let lastErrAt=0;
+function dbErr(e){const now=Date.now();if(now-lastErrAt<3000)return;lastErrAt=now;const c=e&&e.code;
+  if(c==='quota_exceeded')toast('雲端儲存空間已滿，請刪除一些單字');
+  else if(c==='invalid_argument')toast('沒有寫入權限，變更未儲存');
+  else if(c==='revoked'){toast('雲端存取已中斷');S.syncNote='同步已中斷';updateSync()}
+  else toast('儲存失敗，請稍後再試')}
+async function runPool(tasks,n){let i=0;const worker=async()=>{while(i<tasks.length){const t=tasks[i++];await t()}};await Promise.all(Array.from({length:Math.max(1,Math.min(n,tasks.length))},worker))}
+
+/* ---------- storage ---------- */
+const settingsDoc=()=>S.db.doc('data/users/'+S.uid+'/settings');
+const statsDoc=()=>S.db.doc('data/users/'+S.uid+'/stats');
+const wordsCol=()=>S.db.doc('data/users/'+S.uid+'/vocab').collection('words');
+function loadLocal(){const arr=LS.get('vocab.words',[]);S.words=new Map((Array.isArray(arr)?arr:[]).filter(w=>w&&w.id&&w.word).map(w=>[w.id,w]));S.settings={...S.settings,...LS.get('vocab.settings',{})};const st=LS.get('vocab.stats',{days:{}});S.stats={days:(st&&st.days)||{}}}
+function persistLocal(){return LS.set('vocab.words',[...S.words.values()].map(plain))}
+async function saveWord(w,{defer=false}={}){
+  S.words.set(w.id,w);
+  if(S.mode==='cloud'){try{await queued('w:'+w.id,()=>withRetry(()=>wordsCol().doc(w.id).set(plain(w))));return true}catch(e){dbErr(e);return false}}
+  if(S.mode==='local'&&!defer){if(!persistLocal()){toast(LS_OK?'瀏覽器儲存空間不足':'此環境無法保存進度');return false}}
+  return true}
+async function deleteWord(id){S.words.delete(id);
+  if(S.mode==='cloud'){try{await queued('w:'+id,()=>withRetry(()=>wordsCol().doc(id).delete()))}catch(e){dbErr(e)}}else persistLocal()}
+function saveSettings(){if(S.mode==='cloud')queued('settings',()=>withRetry(()=>settingsDoc().set({...S.settings}))).catch(dbErr);else LS.set('vocab.settings',S.settings)}
+let statsTimer=null;
+function todayStats(){return S.stats.days[dayKey(Date.now())]||{r:0,c:0,n:0}}
+function bumpStats(f){const k=dayKey(Date.now());const d=S.stats.days[k]||(S.stats.days[k]={r:0,c:0,n:0});d[f]=(d[f]||0)+1;clearTimeout(statsTimer);statsTimer=setTimeout(saveStats,1500)}
+function saveStats(){const cutoff=dayKey(addDays(Date.now(),-180));for(const k of Object.keys(S.stats.days))if(k<cutoff)delete S.stats.days[k];
+  if(S.mode==='cloud')queued('stats',()=>withRetry(()=>statsDoc().set({days:S.stats.days}))).catch(dbErr);else LS.set('vocab.stats',S.stats)}
+
+/* ---------- memory model (SM-2 style) ---------- */
+function schedule(w,r){
+  const n={...w};const now=Date.now();n.ease=n.ease||2.5;n.reps=n.reps||0;const prev=n.interval||0;const wasNew=!w.lastReview;
+  if(r===0){n.lapses=(n.lapses||0)+(wasNew?0:1);n.reps=0;n.interval=0;n.ease=Math.max(1.3,n.ease-0.2);n.due=now+60000}
+  else{let iv;
+    if(r===1){iv=n.reps===0?1:Math.max(prev+1,Math.round(prev*1.2));n.ease=Math.max(1.3,n.ease-0.15)}
+    else if(r===2){iv=n.reps===0?1:n.reps===1?3:Math.max(prev+1,Math.round(prev*n.ease))}
+    else{iv=n.reps===0?4:Math.max(prev+2,Math.round(Math.max(prev,1)*n.ease*1.3));n.ease=n.ease+0.15}
+    iv=Math.min(iv,365);n.reps+=1;n.interval=iv;n.due=addDays(now,iv)}
+  n.lastReview=now;n.recent=((n.recent||'')+(r===0?'0':'1')).slice(-10);
+  return n}
+function weakness(w){if(!w.lastReview)return 0;const fails=(w.recent||'').slice(-5).split('').filter(c=>c==='0').length;return (w.lapses||0)*2+fails*2+Math.max(0,2.5-(w.ease||2.5))*5+((w.interval||0)<3?0.5:0)}
+function status(w){if(!w.lastReview)return 'new';const iv=w.interval||0;return iv>=21?'mast':iv>=7?'fam':'learn'}
+function counts(){const all=[...S.words.values()];const now=Date.now();const due=all.filter(w=>w.lastReview&&w.due<=now).length;const newAvail=all.filter(w=>!w.lastReview).length;const newLeft=Math.min(newAvail,Math.max(0,S.settings.newPerDay-(todayStats().n||0)));const weak=all.filter(w=>weakness(w)>=3).length;return {due,newLeft,newAvail,weak,reviewed:all.some(w=>w.lastReview)}}
+function buildQueue(kind){
+  const all=[...S.words.values()];const now=Date.now();
+  if(kind==='weak')return all.filter(w=>w.lastReview).sort((a,b)=>weakness(b)-weakness(a)||(a.due||0)-(b.due||0)).slice(0,20).map(w=>w.id);
+  const due=all.filter(w=>w.lastReview&&w.due<=now).sort((a,b)=>weakness(b)-weakness(a)||(a.due||0)-(b.due||0));
+  const fresh=all.filter(w=>!w.lastReview).sort((a,b)=>(a.added||0)-(b.added||0)).slice(0,counts().newLeft);
+  const q=[];let i=0,j=0;while(i<due.length||j<fresh.length){if(i<due.length)q.push(due[i++].id);if(i<due.length)q.push(due[i++].id);if(j<fresh.length)q.push(fresh[j++].id)}
+  return q}
+function fmtNext(w,r){if(r===0)return '再練一次';const d=schedule(w,r).interval;return d>=30?(d/30).toFixed(d>=60?0:1)+' 個月':d+' 天'}
+
+/* ---------- speech ---------- */
+async function speak(text){if(!text)return;
+  if(S.tts){try{await S.tts.speak(text,{language:'en',rate:S.settings.rate});return}catch(e){const c=e&&e.code;if(c==='not_granted')S.tts=null;else if(c==='viewer_stopped'||c==='busy')return;else if(c==='rate_limited'){}}}
+  try{if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=S.settings.rate;const v=speechSynthesis.getVoices().find(v=>/^en[-_]US/i.test(v.lang));if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}else toast('此裝置不支援朗讀')}catch{toast('此裝置不支援朗讀')}}
+
+/* ---------- Claude ---------- */
+const LEVELS={
+  jr:['國中','The learner is a Taiwanese junior-high school student (about CEFR A2-B1). Use common words and short, simple sentences about school, family, friends, hobbies and daily life. Keep the example sentence to 8-14 words.'],
+  sr:['高中','The learner is a Taiwanese senior-high school student (about CEFR B1-B2). Use natural sentences about school, society, technology and daily life. Keep the example sentence to 10-18 words.'],
+  adult:['大學／成人','The learner is a Taiwanese adult with upper-intermediate English. Use natural, modern sentences from the workplace, news and everyday life.']
+};
+function learner(){const k=LEVELS[S.settings.level]?S.settings.level:'jr';return LEVELS[k][1]+' Write Chinese in Traditional Chinese as used in Taiwan. Phonetics use the KK symbols used in Taiwanese dictionaries (US pronunciation).'}
+function examplePrompt(w,memorable){return `${learner()}
+Word or phrase: ${JSON.stringify(w.word)}${w.meaning?`\nMeaning the learner saved: ${JSON.stringify(w.meaning)}`:''}
+${memorable?`The learner has forgotten this word ${w.lapses} times. Write a NEW, vivid sentence whose context makes the meaning unmistakable, and a memory tip that targets the likely confusion (roots, a contrast with a similar word, or a striking image).`:'Write one natural, modern example sentence from everyday life, the workplace, or the news.'}
+${w.example?`Do not reuse this earlier example: ${JSON.stringify(w.example)}`:''}
+Return JSON only, exactly this shape:
+{"phonetic":"KK phonetic between slashes; empty string for phrases longer than three words","pos":"n. / v. / adj. / adv. / phr. etc.","meaning":"concise Traditional Chinese meaning, at most 20 characters","example":"English sentence, 10-20 words, using the word","exampleZh":"Traditional Chinese translation of the example","tip":"memory tip in Traditional Chinese, at most 30 characters"}`}
+function batchPrompt(ws){return `${learner()}
+For each English word or phrase below, return JSON only, in exactly this shape:
+{"items":[{"word":"<exactly as given>","phonetic":"KK phonetic between slashes; empty string for phrases longer than three words","pos":"n. / v. / adj. / adv. / phr. etc.","meaning":"concise Traditional Chinese meaning, at most 20 characters","example":"one natural, modern English sentence (10-20 words) whose context makes the meaning clear","exampleZh":"Traditional Chinese translation of the example","tip":"memory tip in Traditional Chinese, at most 30 characters: roots, a vivid association, or a common collocation"}]}
+Vary the contexts across items. If known_meaning is given, write the example for that sense.
+Items:
+${ws.map(w=>JSON.stringify({word:w.word,known_meaning:w.meaning||''})).join('\n')}`}
+const str=(v,max)=>typeof v==='string'?v.trim().slice(0,max):'';
+function applyAI(n,it,replaceExample){const ph=str(it.phonetic,60),pos=str(it.pos,16),m=str(it.meaning,60),ex=str(it.example,300),exz=str(it.exampleZh,300),tip=str(it.tip,120);
+  if(ph&&!n.phonetic)n.phonetic=ph;if(pos&&!n.pos)n.pos=pos;if(m&&!n.meaning)n.meaning=m;
+  if(ex&&(replaceExample||!n.example)){n.example=ex;n.exampleZh=exz;if(tip)n.tip=tip;n.exDay=dayKey(Date.now())}else if(tip&&!n.tip)n.tip=tip;
+  return n}
+function aiErr(e){const c=e&&e.code;if(c==='not_granted'){S.sample=null;toast('Claude 例句功能未啟用');renderAll()}else if(c==='rate_limited')toast('Claude 正忙，請稍後再試');else toast('Claude 暫時無法產生內容')}
+async function genExample(w,{memorable=false}={}){
+  if(!S.sample||S.genBusy.has(w.id))return;S.genBusy.add(w.id);refreshFor(w.id);
+  try{const res=await S.sample.json(examplePrompt(w,memorable),{modelTier:'quick'});const cur=S.words.get(w.id);if(cur&&res&&typeof res==='object'&&!Array.isArray(res))await saveWord(applyAI({...cur},res,true))}
+  catch(e){aiErr(e)}
+  finally{S.genBusy.delete(w.id);refreshFor(w.id)}}
+const needsEnrich=w=>!w.example||!w.meaning||(!w.phonetic&&w.word.split(/\s+/).length<=3);
+async function enrichAll(){
+  if(!S.sample||S.enriching)return;
+  const list=[...S.words.values()].filter(needsEnrich).sort((a,b)=>(a.added||0)-(b.added||0));
+  if(!list.length){toast('所有單字都已有完整資料');return}
+  S.enriching={done:0,total:list.length};renderView();let stopped=false;
+  for(let i=0;i<list.length&&!stopped;i+=10){
+    const batch=list.slice(i,i+10);
+    try{const res=await S.sample.json(batchPrompt(batch),{modelTier:'quick'});
+      const items=Array.isArray(res&&res.items)?res.items:Array.isArray(res)?res:[];
+      const byWord=new Map(batch.map(w=>[w.word.trim().toLowerCase(),w]));
+      for(const it of items){if(!it||typeof it!=='object')continue;const b=byWord.get(str(it.word,200).toLowerCase());if(!b)continue;const cur=S.words.get(b.id);if(!cur)continue;await saveWord(applyAI({...cur},it,false),{defer:true})}
+      if(S.mode==='local')persistLocal();
+    }catch(e){const c=e&&e.code;if(c==='not_granted'||c==='rate_limited'){aiErr(e);stopped=true}else toast('有一批補齊失敗，已略過')}
+    if(S.enriching){S.enriching.done=Math.min(list.length,i+batch.length);const p=$('#enrichProg');if(p)p.textContent=`補齊中 ${S.enriching.done} / ${S.enriching.total}`}
+  }
+  S.enriching=null;renderAll();if(!stopped)toast('資料補齊完成')}
+
+/* ---------- import parsing ---------- */
+function parseTable(text){
+  text=text.replace(/^\uFEFF/,'');const first=text.split(/\r?\n/).find(l=>l.trim())||'';const delim=first.includes('\t')?'\t':',';
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"'&&f==='')q=true;
+    else if(c===delim){row.push(f);f=''}
+    else if(c==='\n'){row.push(f);rows.push(row);row=[];f=''}
+    else if(c!=='\r')f+=c}
+  row.push(f);rows.push(row);
+  return rows.map(r=>r.map(s=>s.trim())).filter(r=>r.some(Boolean))}
+const LANG=/^(english|英文|英語|chinese.*|中文.*|.*中文|日文|japanese|korean|韓文|french|法文|german|德文|spanish|西班牙文|detect language|偵測語言)$/i;
+const hasLatin=s=>/[A-Za-z]/.test(s), hasCJK=s=>/[\u3400-\u9fff\uf900-\ufaff]/.test(s);
+const HEADER=new Set(['word','words','單字','english','source','原文','text','term','vocabulary']);
+function extractEntries(rows){
+  const out=[];
+  for(const r of rows){let e=null;
+    if(r.length>=4&&LANG.test(r[0])&&LANG.test(r[1])){
+      if(/english|英/i.test(r[0]))e={word:r[2],meaning:r[3]};else if(/english|英/i.test(r[1]))e={word:r[3],meaning:r[2]}}
+    else{const cells=r.filter(Boolean);
+      if(cells.length>=2){const wi=cells.findIndex(c=>hasLatin(c)&&!hasCJK(c));if(wi>=0){const mi=cells.findIndex((c,i)=>i!==wi&&hasCJK(c));e={word:cells[wi],meaning:mi>=0?cells[mi]:''}}}
+      else if(cells.length===1){const c=cells[0];const m=c.match(/^(.+?)\s*(?:\s-\s|：|:|=|—|–)\s*(.+)$/);
+        if(m&&hasLatin(m[1])&&!hasCJK(m[1]))e={word:m[1],meaning:m[2]};else if(m&&hasLatin(m[2])&&!hasCJK(m[2])&&hasCJK(m[1]))e={word:m[2],meaning:m[1]};
+        else if(hasLatin(c)&&!hasCJK(c))e={word:c,meaning:''}}}
+    if(!e)continue;e.word=e.word.replace(/\s+/g,' ').trim();e.meaning=(e.meaning||'').trim();
+    if(!e.word||e.word.length>120||!hasLatin(e.word)||HEADER.has(e.word.toLowerCase()))continue;
+    out.push(e)}
+  return out}
+function parseImport(){const ta=$('#imp');if(ta)S.importText=ta.value;const ents=extractEntries(parseTable(S.importText||''));const seen=new Set();const rows=[];
+  for(const e of ents){const id=wordId(e.word);if(seen.has(id))continue;seen.add(id);rows.push({...e,id,exists:S.words.has(id)})}
+  S.importRows=rows;renderView();if(!rows.length)toast('沒有辨識到英文單字，請確認格式')}
+function newWord(word,meaning,added){return {id:wordId(word),word:word.replace(/\s+/g,' ').trim(),meaning:(meaning||'').trim(),added,due:0,interval:0,ease:2.5,reps:0,lapses:0}}
+async function doImport(){
+  const rows=(S.importRows||[]).filter(r=>!r.exists);if(!rows.length||S.importing)return;
+  S.importing={done:0,total:rows.length};renderView();const base=Date.now();let fail=0;
+  const tasks=rows.map((r,i)=>async()=>{const ok=await saveWord(newWord(r.word,r.meaning,base+i),{defer:true});if(!ok)fail++;S.importing.done++;const p=$('#impProg');if(p)p.textContent=`匯入中 ${S.importing.done} / ${S.importing.total}`});
+  await runPool(tasks,S.mode==='cloud'?3:1);
+  if(S.mode==='local'&&!persistLocal())toast(LS_OK?'瀏覽器儲存空間不足':'此環境無法保存進度');
+  S.importing=null;S.importRows=null;S.importText='';S.justImported=rows.length-fail;renderView();
+  toast(fail?`匯入完成，${fail} 個失敗`:`已匯入 ${rows.length} 個單字`)}
+
+/* ---------- rendering ---------- */
+function highlight(text,word){const t=esc(text);const wd=(word||'').trim();if(!wd)return t;let pat;
+  if(/\s/.test(wd))pat=escRe(esc(wd));else{let st=wd.toLowerCase();if(st.length>4)st=st.replace(/(ies|es|e|y|s)$/,'');pat=escRe(st)+'[a-z]*'}
+  try{return t.replace(new RegExp('\\b('+pat+')','ig'),'<mark>$1</mark>')}catch{return t}}
+function itemHtml(w){const st=status(w);return `<div class="item" data-act="open" data-id="${esc(w.id)}"><div style="flex:1;min-width:0"><div class="w">${esc(w.word)}</div><div class="m">${esc(w.meaning||'—')}</div></div>${w.lapses?`<span class="small" style="color:var(--again);white-space:nowrap">忘 ${w.lapses}</span>`:''}<span class="pill p-${st}">${STL[st]}</span></div>`}
+function fmtDate(t){const d=new Date(t);return (d.getMonth()+1)+'/'+d.getDate()}
+function nextDueText(){const all=[...S.words.values()].filter(w=>w.lastReview);const tmr=all.filter(w=>w.due<addDays(Date.now(),2)).length;
+  if(tmr)return `明天有 ${tmr} 個字到期`;const fut=all.map(w=>w.due).filter(d=>d>Date.now()).sort((a,b)=>a-b)[0];return fut?`下一批在 ${fmtDate(fut)} 到期`:''}
+
+function emptyHtml(){return `<div class="card"><h2 style="font-size:20px">開始建立你的單字庫</h2>
+<p class="muted small" style="margin-top:0">這個 App 依照遺忘曲線安排複習：記得的字間隔越拉越長，常忘的字會更常出現。</p>
+<ol class="steps small"><li>到「新增」分頁，貼上從 Google 翻譯匯出的單字（或手動輸入）</li><li>到「新增」分頁用 Claude 補齊音標、詞性、例句（可自動，或複製指令到 Claude 對話再貼回）</li><li>每天回到這裡複習幾分鐘</li></ol>
+<button class="btn primary block" data-act="tab" data-tab="add">新增單字</button></div>`}
+
+function viewReview(){
+  if(S.session)return viewSession();
+  if(!S.words.size)return emptyHtml();
+  const c=counts();const total=c.due+c.newLeft;const t=todayStats();
+  const d=new Date();const wk='日一二三四五六'[d.getDay()];
+  let h=`<div class="card"><div class="small muted">${d.getMonth()+1} 月 ${d.getDate()} 日 星期${wk}</div>
+  <div class="row" style="align-items:flex-end;gap:12px;margin:10px 0 4px"><div class="big-num">${total}</div><div class="muted" style="padding-bottom:7px">個單字待複習</div></div>
+  <div class="small muted">到期複習 ${c.due} · 今日新字 ${c.newLeft}${t.r?` · 今天已作答 ${t.r} 次`:''}</div>
+  <button class="btn primary block" data-act="start" style="margin-top:14px;min-height:52px" ${total?'':'disabled'}>${total?'開始複習':'今天的進度完成了'}</button>
+  ${total?'':`<p class="small muted center" style="margin:10px 0 0">${esc(nextDueText())}${c.newAvail?`${nextDueText()?'；':''}還有 ${c.newAvail} 個新字，可到「我的」調高每日新字數`:''}</p>`}</div>`;
+  h+=`<div class="card"><div class="row between"><div><h2 style="margin:0 0 2px">弱點特訓</h2><div class="small muted">${c.weak?`有 ${c.weak} 個字你常忘記，值得多練幾次`:'挑出你最不熟的 20 個字加強練習'}</div></div><button class="btn" data-act="weak" ${c.reviewed?'':'disabled'}>開始</button></div></div>`;
+  const weakList=[...S.words.values()].filter(w=>weakness(w)>=3).sort((a,b)=>weakness(b)-weakness(a)).slice(0,5);
+  if(weakList.length)h+=`<div class="card"><h2>最常忘記</h2><div class="list">${weakList.map(itemHtml).join('')}</div></div>`;
+  return h}
+
+function viewSession(){
+  const s=S.session;if(s.idx>=s.queue.length)return viewSummary();
+  const id=s.queue[s.idx];const w=S.words.get(id);if(!w){s.queue.splice(s.idx,1);return viewSession()}
+  const key=id+':'+s.idx;
+  if(s.cardKey!==key){s.cardKey=key;const dir=S.settings.direction;s.reverse=(!w.lastReview||!w.meaning)?false:dir==='zh2en'?true:dir==='mix'?Math.random()<.5:false}
+  const pct=Math.round(s.idx/s.queue.length*100);
+  const title=s.kind==='weak'?'弱點特訓':s.kind==='retry'?'重練忘記的字':'今日複習';
+  const sayBtn=(t,sm)=>`<button class="icon-btn${sm?' sm':''}" data-act="say" data-text="${esc(t)}" aria-label="朗讀">${ICON.speak}</button>`;
+  const front=s.reverse
+    ?`<div class="small muted">想想英文怎麼說</div><div class="zh-front">${esc(w.meaning)}</div>${w.pos?`<span class="pos">${esc(w.pos)}</span>`:''}`
+    :`<div class="row between" style="align-items:flex-start"><div class="word">${esc(w.word)}</div>${sayBtn(w.word)}</div>${!w.lastReview?'<span class="pill p-new" style="margin-top:8px">新字</span>':''}`;
+  let back='';
+  if(s.revealed){const gen=S.genBusy.has(w.id);back='<hr class="sep">';
+    if(s.reverse)back+=`<div class="row between" style="align-items:flex-start"><div class="word">${esc(w.word)}</div>${sayBtn(w.word)}</div>`;
+    back+=`<div class="phon">${w.pos&&!s.reverse?`<span class="pos">${esc(w.pos)}</span>`:''}${esc(w.phonetic||'')}</div>`;
+    if(!s.reverse)back+=`<div class="meaning">${w.meaning?esc(w.meaning):'<span class="muted small">尚無中文意思</span>'}</div>`;
+    if(w.example)back+=`<div class="example${gen?' dim':''}"><div class="row" style="align-items:flex-start;gap:8px"><div class="en" style="flex:1">${highlight(w.example,w.word)}</div>${sayBtn(w.example,true)}</div>${w.exampleZh?`<div class="small muted" style="margin-top:6px">${esc(w.exampleZh)}</div>`:''}</div>${w.tip?`<div class="tip">💡 ${esc(w.tip)}</div>`:''}`;
+    if(gen)back+=`<div class="small muted" style="margin-top:10px"><span class="loader"></span> Claude 正在寫${w.example?'新':''}例句…</div>`;
+    else if(!w.example&&!S.sample)back+=`<div class="example small muted">尚無例句</div>`;
+    back+=`<div class="row" style="gap:4px;margin-top:10px;flex-wrap:wrap">${S.sample?`<button class="btn ghost small" data-act="regen" data-id="${esc(w.id)}" ${gen?'disabled':''}>${ICON.spark} 換一個例句</button>`:''}<button class="btn ghost small" data-act="open" data-id="${esc(w.id)}">編輯</button></div>`}
+  const labels=['忘記','困難','記得','簡單'];
+  const bottom=s.revealed
+    ?`<div class="rate">${labels.map((l,r)=>`<button class="r${r}" data-act="rate" data-r="${r}">${l}<small>${fmtNext(w,r)}</small></button>`).join('')}</div>`
+    :`<button class="btn primary block" data-act="reveal" style="margin-top:14px;min-height:54px">顯示答案</button>`;
+  return `<div class="row between small muted" style="margin:2px 2px 8px"><span>${title} · ${s.idx+1} / ${s.queue.length}</span><button class="btn ghost" data-act="quit">結束</button></div>
+  <div class="progress"><i style="width:${pct}%"></i></div>
+  <div class="card flash" style="margin-top:12px">${front}${back}</div>${bottom}`}
+
+function viewSummary(){const s=S.session;const acc=s.done?Math.round(s.correct/s.done*100):0;const forgot=[...s.forgot].map(id=>S.words.get(id)).filter(Boolean);
+  return `<div class="card center"><div class="small muted">完成！</div><div class="big-num" style="margin:8px 0">${s.done}</div><div class="muted">次作答 · 正確率 ${acc}%</div></div>
+  ${forgot.length?`<div class="card"><h2>這次忘記的字（${forgot.length}）</h2><div class="list">${forgot.map(itemHtml).join('')}</div><button class="btn block" data-act="retry" style="margin-top:12px">再練一次這些字</button></div>`:''}
+  <button class="btn primary block" data-act="home">回首頁</button>`}
+
+function viewLibrary(){const all=[...S.words.values()];const cnt={all:all.length,new:0,learn:0,fam:0,mast:0};all.forEach(w=>cnt[status(w)]++);
+  const chip=(k,l)=>`<button class="chip${S.libFilter===k?' on':''}" data-act="filter" data-v="${k}">${l} ${cnt[k]}</button>`;
+  return `<div class="row" style="gap:8px;margin-bottom:10px"><input id="q" type="search" placeholder="搜尋單字或中文" value="${esc(S.libQuery)}" autocomplete="off"><select id="sort" style="width:auto">
+  ${[['weak','最弱優先'],['recent','最近加入'],['due','即將到期'],['az','A → Z']].map(([v,l])=>`<option value="${v}"${S.libSort===v?' selected':''}>${l}</option>`).join('')}</select></div>
+  <div class="chips">${chip('all','全部')}${chip('new','新字')}${chip('learn','學習中')}${chip('fam','熟悉')}${chip('mast','精通')}</div>
+  <div class="card" style="padding:6px 14px"><div class="list" id="libList"></div></div>`}
+function renderLibList(){const el=$('#libList');if(!el)return;let ws=[...S.words.values()];const q=S.libQuery.trim().toLowerCase();
+  if(q)ws=ws.filter(w=>w.word.toLowerCase().includes(q)||(w.meaning||'').toLowerCase().includes(q));
+  if(S.libFilter!=='all')ws=ws.filter(w=>status(w)===S.libFilter);
+  const srt={weak:(a,b)=>weakness(b)-weakness(a)||(b.added||0)-(a.added||0),recent:(a,b)=>(b.added||0)-(a.added||0),due:(a,b)=>(a.lastReview?a.due:Infinity)-(b.lastReview?b.due:Infinity),az:(a,b)=>a.word.localeCompare(b.word,'en',{sensitivity:'base'})}[S.libSort];
+  ws.sort(srt);const total=ws.length;
+  el.innerHTML=total?ws.slice(0,S.libLimit).map(itemHtml).join('')+(total>S.libLimit?`<button class="btn ghost block" data-act="more">顯示更多（還有 ${total-S.libLimit} 個）</button>`:''):`<p class="muted center small" style="padding:20px 0">${S.words.size?'沒有符合的單字':'單字庫是空的'}</p>`}
+
+function viewAdd(){
+  const rows=S.importRows;const newRows=rows?rows.filter(r=>!r.exists):[];
+  const missing=[...S.words.values()].filter(needsEnrich).length;
+  let h=`<div class="card"><h2>快速新增</h2><div class="row" style="gap:8px;flex-wrap:wrap"><input id="qa-word" placeholder="英文單字或片語" autocomplete="off" autocapitalize="off" style="flex:2;min-width:160px"><input id="qa-meaning" placeholder="中文（可留空）" style="flex:1;min-width:120px"></div>
+  <button class="btn primary block" data-act="quickAdd" style="margin-top:10px">新增</button><p class="small muted" style="margin:8px 0 0">留空的中文、音標與例句，可在下方「用 Claude 補齊資料」補上。</p></div>`;
+  h+=`<div class="card"><h2>從 Google 翻譯匯入</h2>
+  <ol class="steps small"><li>電腦開 translate.google.com → 右上「已儲存」→ 匯出到 Google 試算表</li><li>在試算表全選（⌘/Ctrl + A）複製，貼到下面；或「檔案 → 下載 → CSV」後上傳</li></ol>
+  <textarea id="imp" placeholder="貼上試算表內容，也支援：&#10;resilient, 有韌性的&#10;mitigate - 減輕&#10;或一行一個英文單字">${esc(S.importText)}</textarea>
+  <div class="row" style="gap:8px;margin-top:10px"><label class="btn" style="flex:1">上傳 CSV<input id="file" type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" hidden></label><button class="btn primary" style="flex:1" data-act="parse">解析</button></div>`;
+  if(S.importing)h+=`<p class="small" id="impProg" style="margin:12px 0 0"><span class="loader"></span> 匯入中 ${S.importing.done} / ${S.importing.total}</p>`;
+  else if(rows&&rows.length){h+=`<p class="small" style="margin:12px 0 0">找到 <b>${rows.length}</b> 筆 · 新單字 <b>${newRows.length}</b> 個${rows.length-newRows.length?` · 已在單字庫 ${rows.length-newRows.length} 個`:''}</p>
+    <div class="preview">${rows.slice(0,80).map(r=>`<div class="pr"><span style="flex:1"><b>${esc(r.word)}</b> <span class="x">${esc(r.meaning)}</span></span>${r.exists?'<span class="x small">已存在</span>':''}</div>`).join('')}${rows.length>80?`<div class="pr x">…還有 ${rows.length-80} 筆</div>`:''}</div>
+    <button class="btn primary block" data-act="doImport" style="margin-top:10px" ${newRows.length?'':'disabled'}>匯入 ${newRows.length} 個新單字</button>`}
+  h+=`</div>`;
+  h+=`<div class="card"><h2>用 Claude 補齊資料</h2>`;
+  if(!S.sample){const lst=[...S.words.values()].filter(needsEnrich);
+    h+=`<ol class="steps small" style="margin-top:0"><li>按「複製指令」（一次最多 10 個字）</li><li>貼到 Claude 對話送出</li><li>把 Claude 的回覆整段複製，貼到下面按「套用結果」</li></ol>
+    <p class="small muted" style="margin:0 0 10px">${lst.length?`目前有 ${lst.length} 個單字缺少中文、音標或例句。`:'所有單字都有完整資料。'}</p>
+    <button class="btn${lst.length?' primary':''} block" data-act="copyPrompt" ${lst.length?'':'disabled'}>${ICON.spark} 複製指令（前 ${Math.min(10,lst.length)} 個字）</button>
+    <textarea id="paste" placeholder="貼上 Claude 回覆的內容" style="margin-top:10px;min-height:90px">${esc(S.pasteText||'')}</textarea>
+    <button class="btn block" data-act="applyPaste" style="margin-top:8px">套用結果</button>`}
+  else if(S.enriching)h+=`<p class="small" id="enrichProg" style="margin:0"><span class="loader"></span> 補齊中 ${S.enriching.done} / ${S.enriching.total}</p>`;
+  else h+=`<p class="small muted" style="margin:0 0 10px">${missing?`有 ${missing} 個單字缺少中文、音標或例句。`:'所有單字都有完整資料。'}${S.justImported?` 剛匯入 ${S.justImported} 個新字。`:''}</p><button class="btn${missing?' primary':''} block" data-act="enrich" ${missing?'':'disabled'}>${ICON.spark} 補齊 ${missing} 個單字的音標、詞性、例句</button>`;
+  h+=`</div>`;
+  return h}
+
+function viewMe(){
+  const all=[...S.words.values()];const cnt={new:0,learn:0,fam:0,mast:0};all.forEach(w=>cnt[status(w)]++);
+  const t=todayStats();const acc=t.r?Math.round(t.c/t.r*100):0;
+  let streak=0;{let d=startOfDay(Date.now());if(!((S.stats.days[dayKey(d)]||{}).r))d=addDays(d,-1);while((S.stats.days[dayKey(d)]||{}).r>0){streak++;d=addDays(d,-1)}}
+  const days=[];for(let i=6;i>=0;i--){const d=addDays(Date.now(),-i);days.push({lab:i===0?'今天':fmtDate(d),r:(S.stats.days[dayKey(d)]||{}).r||0})}
+  const max=Math.max(5,...days.map(d=>d.r));
+  const seg=(act,cur,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button class="${String(cur)===String(v)?'on':''}" data-act="${act}" data-v="${v}">${l}</button>`).join('')}</div>`;
+  return `<div class="card"><h2>學習概況</h2><div class="grid2">
+   <div class="stat"><b>${all.length}</b><span>總單字</span></div><div class="stat"><b>${cnt.mast}</b><span>精通（間隔 ≥ 21 天）</span></div>
+   <div class="stat"><b>${cnt.learn+cnt.fam}</b><span>學習中／熟悉</span></div><div class="stat"><b>${cnt.new}</b><span>尚未學習</span></div>
+   <div class="stat"><b>${streak}</b><span>連續學習天數</span></div><div class="stat"><b>${t.r?acc+'%':'—'}</b><span>今日正確率</span></div></div></div>
+  <div class="card"><h2>近 7 天作答次數</h2><div class="bars">${days.map(d=>`<div><b>${d.r||''}</b><i style="height:${Math.round(d.r/max*80)}%"></i><span>${d.lab}</span></div>`).join('')}</div></div>
+  <div class="card"><h2>設定</h2>
+   <span class="label">每日新字數</span>${seg('setNew',S.settings.newPerDay,[[5,'5'],[10,'10'],[15,'15'],[20,'20'],[30,'30']])}
+   <span class="label">例句程度（用 Claude 補齊時使用）</span>${seg('setLevel',S.settings.level,Object.entries(LEVELS).map(([k,v])=>[k,v[0]]))}
+   <span class="label">測驗方向</span>${seg('setDir',S.settings.direction,[['en2zh','英 → 中'],['zh2en','中 → 英'],['mix','混合']])}
+   <span class="label">朗讀速度</span>${seg('setRate',S.settings.rate,[[0.8,'慢'],[0.95,'正常'],[1.1,'快']])}</div>
+  <div class="card"><h2>資料</h2><p class="note" style="margin:0 0 10px">${S.mode==='cloud'?'單字與進度存在你的 Claude 帳號中，只有你看得到；手機與電腦開同一個連結會自動同步。':LS_OK?'單字與進度存在這個瀏覽器裡，換裝置或清除瀏覽資料後不會保留。建議定期用下方按鈕複製單字備份。':'此環境無法保存資料，關閉頁面後進度會消失。請改用瀏覽器直接開啟網站版本。'}</p>
+   <button class="btn block" data-act="copyCsv">複製全部單字（CSV，可貼到 Google 試算表）</button></div>
+  <div class="card"><h2>放到手機主畫面</h2><ol class="steps small"><li>iPhone：用 Safari 開這個 App 的連結 → 分享 → 加入主畫面</li><li>Android：用 Chrome 開啟 → 右上 ⋮ → 加到主畫面</li></ol></div>
+  <div class="card"><h2>記憶原理</h2><p class="small muted" style="margin:0">採用 SM-2 間隔重複法：每次作答後依你的回答調整下次複習時間。「記得」會把間隔拉長（1 → 3 → 約 8 天…），「忘記」會讓字當場再出現並縮短間隔，同時降低熟練係數，讓常忘的字更常回來；</p></div>`}
+
+function renderSheet(){
+  const w=S.words.get(S.sheetId);const el=$('#sheet');if(!w){closeSheet();return}
+  const st=status(w);const gen=S.genBusy.has(w.id);
+  el.classList.remove('hidden');
+  el.innerHTML=`<div class="panel" role="dialog" aria-modal="true" aria-label="編輯單字">
+  <div class="row between" style="align-items:flex-start"><div class="word" style="font-size:32px">${esc(w.word)}</div><div class="row" style="gap:6px"><button class="icon-btn" data-act="say" data-text="${esc(w.word)}" aria-label="朗讀">${ICON.speak}</button><button class="icon-btn" data-act="closeSheet" aria-label="關閉" style="background:var(--bg);color:var(--muted)">✕</button></div></div>
+  <div class="small muted" style="margin-top:6px"><span class="pill p-${st}">${STL[st]}</span> ${w.lastReview?` · 下次複習 ${w.due<=Date.now()?'現在':fmtDate(w.due)} · 間隔 ${w.interval||0} 天 · 忘記 ${w.lapses||0} 次`:' · 尚未複習'}</div>
+  <span class="label">中文意思</span><input id="f-meaning" value="${esc(w.meaning||'')}">
+  <div class="row" style="gap:8px"><div style="flex:2"><span class="label">音標</span><input id="f-phon" value="${esc(w.phonetic||'')}"></div><div style="flex:1"><span class="label">詞性</span><input id="f-pos" value="${esc(w.pos||'')}"></div></div>
+  <span class="label">例句</span><textarea id="f-ex" style="min-height:70px">${esc(w.example||'')}</textarea>
+  <span class="label">例句翻譯</span><textarea id="f-exzh" style="min-height:60px">${esc(w.exampleZh||'')}</textarea>
+  <span class="label">記憶小撇步</span><input id="f-tip" value="${esc(w.tip||'')}">
+  <button class="btn primary block" data-act="saveDetail" style="margin-top:14px">儲存</button>
+  <div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap">
+   ${S.sample?`<button class="btn" style="flex:1" data-act="regen" data-id="${esc(w.id)}" ${gen?'disabled':''}>${gen?'<span class="loader"></span> 產生中':ICON.spark+' 新例句'}</button>`:''}
+   ${w.example?`<button class="btn" style="flex:1" data-act="say" data-text="${esc(w.example)}">${ICON.speak} 朗讀例句</button>`:''}</div>
+  <div class="row" style="gap:8px;margin-top:8px">
+   <button class="btn" style="flex:1" data-act="resetWord">重設進度</button>
+   <button class="btn danger" style="flex:1" data-act="delWord">${S.delArmed?'再按一次確認刪除':'刪除'}</button></div></div>`}
+function closeSheet(){S.sheetId=null;S.delArmed=false;const el=$('#sheet');el.classList.add('hidden');el.innerHTML=''}
+function refreshFor(id){if(S.tab==='review'&&S.session&&S.session.queue[S.session.idx]===id&&S.session.revealed&&$('#sheet').classList.contains('hidden'))renderView();
+  if(S.sheetId===id&&!isTyping())renderSheet()}
+
+function updateSync(){const el=$('#sync');if(!el)return;el.textContent=S.syncNote||(S.mode==='cloud'?'☁ 已同步':S.mode==='local'?(LS_OK?'本機儲存':'⚠ 關閉後進度會消失'):'')}
+function renderView(){
+  if(S.mode==='loading'){$('#view').innerHTML=`<div class="card center"><span class="loader"></span> 載入單字庫…${S.loadNote?`<p class="muted small">${esc(S.loadNote)}</p>`:''}</div>`;return}
+  const v=$('#view');v.innerHTML=S.tab==='review'?viewReview():S.tab==='library'?viewLibrary():S.tab==='add'?viewAdd():viewMe();
+  if(S.tab==='library')renderLibList();
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
+  updateSync()}
+function renderAll(){renderView();if(S.sheetId&&!isTyping())renderSheet()}
+function softRefresh(){if(isTyping()){if(S.tab==='library')renderLibList();return}
+  if(S.tab==='review'&&S.session)return;
+  if(S.tab==='add'&&(S.importing||S.enriching))return;
+  renderView();if(S.sheetId)renderSheet()}
+
+/* ---------- actions ---------- */
+function startSession(kind,ids){if(!ids.length){toast('目前沒有要複習的字');return}
+  S.session={kind,queue:ids,idx:0,revealed:false,done:0,correct:0,forgot:new Set(),cardKey:null};S.tab='review';renderView();window.scrollTo(0,0)}
+function reveal(){const s=S.session;if(!s||s.revealed)return;s.revealed=true;renderView();
+  const w=S.words.get(s.queue[s.idx]);if(w&&S.sample&&(!w.example||((w.lapses||0)>=2&&w.exDay!==dayKey(Date.now()))))genExample(w,{memorable:(w.lapses||0)>=2})}
+function rate(r){const s=S.session;if(!s||!s.revealed)return;const id=s.queue[s.idx];const w=S.words.get(id);if(!w)return;
+  const wasNew=!w.lastReview;const n=schedule(w,r);s.done++;
+  if(r>0)s.correct++;else{s.forgot.add(id);s.queue.splice(Math.min(s.queue.length,s.idx+4),0,id)}
+  bumpStats('r');if(r>0)bumpStats('c');if(wasNew)bumpStats('n');
+  saveWord(n);s.idx++;s.revealed=false;renderView();window.scrollTo(0,0)}
+async function quickAdd(){const wi=$('#qa-word'),mi=$('#qa-meaning');const word=(wi.value||'').replace(/\s+/g,' ').trim();const meaning=(mi.value||'').trim();
+  if(!word||!hasLatin(word)){toast('請輸入英文單字或片語');return}
+  const id=wordId(word);if(S.words.has(id)){toast('單字庫裡已經有這個字');return}
+  const w=newWord(word,meaning,Date.now());wi.value='';mi.value='';wi.blur();mi.blur();
+  await saveWord(w);toast(`已新增 ${word}`);renderView();if(S.sample)genExample(w)}
+async function copyText(text,okMsg,title){
+  try{await navigator.clipboard.writeText(text);toast(okMsg)}
+  catch{const el=$('#sheet');S.sheetId=null;el.classList.remove('hidden');el.innerHTML=`<div class="panel"><div class="row between"><h2 style="margin:0">${esc(title)}</h2><button class="icon-btn" data-act="closeSheet" style="background:var(--bg);color:var(--muted)">✕</button></div><textarea readonly style="min-height:50vh;margin-top:10px;font-size:13px">${esc(text)}</textarea></div>`}}
+const ACT={
+  tab:el=>{S.tab=el.dataset.tab;closeSheet();renderView();window.scrollTo(0,0)},
+  start:()=>startSession('daily',buildQueue('daily')),
+  weak:()=>startSession('weak',buildQueue('weak')),
+  retry:()=>startSession('retry',[...S.session.forgot]),
+  home:()=>{S.session=null;renderView()},
+  quit:()=>{S.session=null;renderView()},
+  reveal, rate:el=>rate(+el.dataset.r),
+  say:el=>speak(el.dataset.text),
+  regen:el=>{const w=S.words.get(el.dataset.id);if(w)genExample(w,{memorable:(w.lapses||0)>=2})},
+  open:el=>{S.sheetId=el.dataset.id;S.delArmed=false;renderSheet()},
+  closeSheet,
+  saveDetail:async()=>{const w=S.words.get(S.sheetId);if(!w)return;const g=id=>($(id).value||'').trim();
+    const n={...w,meaning:g('#f-meaning'),phonetic:g('#f-phon'),pos:g('#f-pos'),example:g('#f-ex'),exampleZh:g('#f-exzh'),tip:g('#f-tip')};
+    closeSheet();await saveWord(n);toast('已儲存');softRefresh()},
+  resetWord:async()=>{const w=S.words.get(S.sheetId);if(!w)return;const n={...w,due:0,interval:0,ease:2.5,reps:0,lapses:0,recent:''};delete n.lastReview;await saveWord(n);toast('已重設為新字');renderSheet();softRefresh()},
+  delWord:async()=>{if(!S.delArmed){S.delArmed=true;renderSheet();return}const id=S.sheetId;closeSheet();
+    if(S.session){const s=S.session;const before=s.queue.slice(0,s.idx).filter(x=>x===id).length;s.queue=s.queue.filter(x=>x!==id);s.idx-=before;s.revealed=false;s.cardKey=null}
+    await deleteWord(id);toast('已刪除');renderView()},
+  filter:el=>{S.libFilter=el.dataset.v;S.libLimit=150;renderView()},
+  more:()=>{S.libLimit+=150;renderLibList()},
+  quickAdd, parse:parseImport, doImport, enrich:enrichAll,
+  setNew:el=>{S.settings.newPerDay=+el.dataset.v;saveSettings();renderView()},
+  setDir:el=>{S.settings.direction=el.dataset.v;saveSettings();renderView()},
+  setLevel:el=>{S.settings.level=el.dataset.v;saveSettings();renderView()},
+  copyPrompt:()=>{const lst=[...S.words.values()].filter(needsEnrich).sort((a,b)=>(a.added||0)-(b.added||0)).slice(0,10);if(!lst.length){toast('所有單字都有完整資料');return}
+    copyText(batchPrompt(lst)+'\nReturn the JSON only, with no other text.','指令已複製，貼到 Claude 對話送出','複製指令')},
+  applyPaste:async()=>{const ta=$('#paste');const raw=ta?ta.value:S.pasteText||'';S.pasteText=raw;
+    let res=null;const m=raw.replace(/```json|```/g,'').match(/[\[{][\s\S]*[\]}]/);try{res=m?JSON.parse(m[0]):null}catch{res=null}
+    const items=Array.isArray(res&&res.items)?res.items:Array.isArray(res)?res:[];
+    if(!items.length){toast('讀不到內容，請把 Claude 的整段回覆貼上');return}
+    const byWord=new Map([...S.words.values()].map(w=>[w.word.trim().toLowerCase(),w]));let n=0;
+    for(const it of items){if(!it||typeof it!=='object')continue;const b=byWord.get(str(it.word,200).toLowerCase());if(!b)continue;const cur=S.words.get(b.id);if(!cur)continue;await saveWord(applyAI({...cur},it,false),{defer:true});n++}
+    if(S.mode==='local')persistLocal();S.pasteText='';renderView();toast(n?`已補齊 ${n} 個單字`:'沒有對應到單字庫裡的字')},
+  setRate:el=>{S.settings.rate=+el.dataset.v;saveSettings();renderView()},
+  copyCsv:()=>{const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+    const rows=[['word','meaning','phonetic','pos','example','exampleZh','interval_days','lapses'],...[...S.words.values()].sort((a,b)=>(a.added||0)-(b.added||0)).map(w=>[w.word,w.meaning,w.phonetic,w.pos,w.example,w.exampleZh,w.interval||0,w.lapses||0])];
+    copyText(rows.map(r=>r.map(q).join(',')).join('\n'),'已複製，可貼到 Google 試算表或記事本備份','全選後複製')}
+};
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el||el.disabled)return;const fn=ACT[el.dataset.act];if(fn){e.preventDefault();fn(el,e)}});
+$('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
+document.addEventListener('input',e=>{if(e.target.id==='q'){S.libQuery=e.target.value;S.libLimit=150;renderLibList()}else if(e.target.id==='imp')S.importText=e.target.value;else if(e.target.id==='paste')S.pasteText=e.target.value});
+document.addEventListener('change',async e=>{
+  if(e.target.id==='sort'){S.libSort=e.target.value;renderLibList()}
+  else if(e.target.id==='file'){const f=e.target.files&&e.target.files[0];if(!f)return;try{S.importText=await f.text();const ta=$('#imp');if(ta)ta.value=S.importText;parseImport()}catch{toast('無法讀取檔案')}}});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&S.sheetId!==null){closeSheet();return}
+  if(isTyping()){if(e.key==='Enter'&&(e.target.id==='qa-word'||e.target.id==='qa-meaning')){e.preventDefault();quickAdd()}return}
+  if(!$('#sheet').classList.contains('hidden'))return;
+  const s=S.session;if(S.tab!=='review'||!s||s.idx>=s.queue.length)return;
+  if(!s.revealed&&(e.key===' '||e.key==='Enter')){e.preventDefault();reveal()}
+  else if(s.revealed&&['1','2','3','4'].includes(e.key))rate(+e.key-1)});
+document.querySelectorAll('.tabs button').forEach(b=>{b.innerHTML=ICON[b.dataset.tab]+'<span>'+TABS[b.dataset.tab]+'</span>'});
+
+/* ---------- init ---------- */
+async function init(){
+  renderView();
+  const C=window.claude;
+  const useCap=n=>(C&&typeof C.use==='function')?Promise.resolve(C.use(n)).catch(()=>null):Promise.resolve(null);
+  useCap('sample').then(s=>{S.sample=s||null;if(S.mode!=='loading')softRefresh()});
+  useCap('tts').then(t=>{S.tts=t||null});
+  const [db,user]=await Promise.all([useCap('db'),useCap('user')]);
+  let uid=null;if(db&&user){try{uid=await user.id()}catch{}}
+  if(!db||!uid){S.mode='local';loadLocal();renderAll();return}
+  S.db=db;S.uid=uid;
+  const timer=setTimeout(()=>{if(S.mode==='loading'){S.loadNote='雲端資料暫時連不上，仍在重試…';renderView()}else{S.syncNote='資料可能不是最新';updateSync()}},10000);
+  settingsDoc().get().then(s=>{if(s.exists){const d=s.data()||{};S.settings={...S.settings,...JSON.parse(JSON.stringify(d))};if(S.mode!=='loading')softRefresh()}}).catch(()=>{});
+  statsDoc().get().then(s=>{if(s.exists){const d=s.data()||{};S.stats={days:JSON.parse(JSON.stringify(d.days||{}))};if(S.mode!=='loading')softRefresh()}}).catch(()=>{});
+  wordsCol().onSnapshot(snap=>{
+    const m=new Map();for(const d of snap.docs){const v=d.data();if(v&&typeof v.word==='string')m.set(d.id,{...v,id:d.id})}
+    S.words=m;
+    if(!snap.metadata.fromCache){clearTimeout(timer);S.loadNote='';if(S.syncNote==='資料可能不是最新')S.syncNote=''}
+    if(S.mode==='loading'){S.mode='cloud';renderAll()}else softRefresh();
+  },err=>{clearTimeout(timer);
+    if(S.mode==='loading'){S.mode='local';loadLocal();toast('無法連上雲端，改用本機儲存');renderAll()}
+    else{S.syncNote='雲端同步已中斷';updateSync()}});
+}
+init();
+</script>
+</body>
+</html>
